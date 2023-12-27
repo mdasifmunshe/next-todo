@@ -21,7 +21,7 @@ export const todoRouter = router({
     if (!todo) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: `No todo`,
+        message: `Todo NOT_FOUND`,
       })
     }
 
