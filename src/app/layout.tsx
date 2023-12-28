@@ -3,6 +3,7 @@ import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import TRPCTanstackProvider from '@/lib/TRPCTanstackProvider'
+import Header from '@/components/Layout/Header'
 
 export const fontSans = FontSans({
   subsets: ['latin'],
@@ -28,7 +29,10 @@ export default function RootLayout({
         )}
       >
         <TRPCTanstackProvider>
-          <main>{children}</main>
+          <main>
+            <Header />
+            {children}
+          </main>
         </TRPCTanstackProvider>
       </body>
     </html>
