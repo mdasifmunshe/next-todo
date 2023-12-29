@@ -2,7 +2,7 @@ import { publicProcedure, router } from '../trpc'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../prisma'
-import { z } from 'zod'
+import { TodoValidator } from '@/lib/TodoValidator'
 
 const defaultTodoSelect = {
   id: true,
@@ -22,6 +22,22 @@ export const todoRouter = router({
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: `Todo NOT_FOUND`,
+      })
+    }
+
+    return todo
+  }),
+
+  add: publicProcedure.input(TodoValidator).mutation(async ({ input }) => {
+    const todo = await prisma.todo.create({
+      data: input,
+      select: defaultTodoSelect,
+    })
+
+    if (!todo) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `No todo was created`,
       })
     }
 
