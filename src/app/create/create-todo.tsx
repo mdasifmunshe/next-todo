@@ -17,7 +17,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { TodoValidator, TTodoValidator } from '@/lib/TodoValidator'
 import { trpc } from '../_trpc/client'
-// import useTextarea from '@/hooks/useTextarea'
+import useTextarea from '@/hooks/useTextarea'
 
 const CreateTodo = () => {
   return (
@@ -52,6 +52,7 @@ export default CreateTodo
 const PostForm = () => {
   const [error, setError] = useState('')
   const [isSubmitting, setSubmitting] = useState(false)
+  const { titleRef, descriptionRef } = useTextarea()
 
   const router = useRouter()
   const getTodos = trpc.todo.getAll.useQuery()
@@ -98,6 +99,8 @@ const PostForm = () => {
               <Textarea
                 maxLength={300}
                 rows={1}
+                // @ts-ignore
+                ref={titleRef}
                 placeholder="Title"
                 className="box-border block min-h-[39px] w-full resize-none overflow-hidden overflow-x-hidden break-words rounded pr-[68px] text-[#1c1c1c] focus-visible:border focus-visible:border-[#1A1A1B] focus-visible:ring-0 focus-visible:ring-offset-0"
                 {...register('title')}
@@ -106,6 +109,8 @@ const PostForm = () => {
             <div className="space-y-1">
               <Textarea
                 maxLength={3000}
+                // @ts-ignore
+                ref={descriptionRef}
                 placeholder="Description (optional)"
                 className="box-border block min-h-[122px] w-full overflow-hidden break-words rounded text-[#1c1c1c] focus-visible:border focus-visible:border-[#1A1A1B] focus-visible:ring-0 focus-visible:ring-offset-0"
                 {...register('description')}
