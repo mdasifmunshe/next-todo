@@ -8,17 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import axios from 'axios'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { z } from 'zod'
-// import { createTodoSchema } from '@/lib/validationSchemas'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { TodoValidator, TTodoValidator } from '@/lib/TodoValidator'
+import { trpc } from '../_trpc/client'
 // import useTextarea from '@/hooks/useTextarea'
 
 const CreateTodo = () => {
@@ -52,41 +50,48 @@ const CreateTodo = () => {
 export default CreateTodo
 
 const PostForm = () => {
-  const router = useRouter()
-  //   const {
-  //     control,
-  //     handleSubmit,
-  //     register,
-  //     formState: { errors },
-  //   } = useForm<TodoForm>({
-  //     resolver: zodResolver(createTodoSchema),
-  //   })
   const [error, setError] = useState('')
   const [isSubmitting, setSubmitting] = useState(false)
 
-  //   const queryClient = useQueryClient()
+  const router = useRouter()
+  const getTodos = trpc.todo.getAll.useQuery()
 
-  //   const mutation = useMutation({
-  //     mutationFn: createTodo,
-  //     onSuccess: () => {
-  //       queryClient.invalidateQueries({ queryKey: ['todos'] })
-  //       router.push('/')
-  //     },
-  //   })
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<TTodoValidator>({
+    resolver: zodResolver(TodoValidator),
+  })
 
-  // const onSubmit = async (data) => {
-  //   try {
-  //     await mutation.mutateAsync(data)
-  //   } catch (error) {
-  //     console.error('Error submitting form:', error)
-  //   }
-  //   console.log(data)
-  // }
+  const { mutate: addTodo } = trpc.todo.add.useMutation({
+    onSuccess: () => {
+      router.refresh()
+      router.push('/')
+    },
+
+    onError: (err) => {
+      if (err.data?.code === 'INTERNAL_SERVER_ERROR') {
+        console.log('No todo was created')
+      }
+    },
+
+    onSettled: () => {
+      getTodos.refetch()
+    },
+  })
+
+  const onSubmit = async ({ title, description }: TTodoValidator) => {
+    try {
+      addTodo({ title, description })
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    }
+  }
 
   return (
     <>
-      {/* <form onSubmit={handleSubmit(onSubmit)}> */}
-      <form>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Card className="rounded border-none">
           <CardContent className="space-y-2 pt-4">
             <div>
@@ -95,7 +100,7 @@ const PostForm = () => {
                 rows={1}
                 placeholder="Title"
                 className="box-border block min-h-[39px] w-full resize-none overflow-hidden overflow-x-hidden break-words rounded pr-[68px] text-[#1c1c1c] focus-visible:border focus-visible:border-[#1A1A1B] focus-visible:ring-0 focus-visible:ring-offset-0"
-                //{...register('title')}
+                {...register('title')}
               />
             </div>
             <div className="space-y-1">
@@ -103,7 +108,7 @@ const PostForm = () => {
                 maxLength={3000}
                 placeholder="Description (optional)"
                 className="box-border block min-h-[122px] w-full overflow-hidden break-words rounded text-[#1c1c1c] focus-visible:border focus-visible:border-[#1A1A1B] focus-visible:ring-0 focus-visible:ring-offset-0"
-                //{...register('description')}
+                {...register('description')}
               />
             </div>
           </CardContent>
@@ -112,6 +117,7 @@ const PostForm = () => {
               variant={'default'}
               className="h-8 rounded-full text-sm font-bold"
               disabled={isSubmitting}
+              type="submit"
             >
               Todo
             </Button>

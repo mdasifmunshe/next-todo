@@ -3,7 +3,7 @@ import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import TRPCTanstackProvider from '@/lib/TRPCTanstackProvider'
-import Header from '@/components/Layout/Header'
+import Header from '@/components/Layout/Header/Header'
 
 export const fontSans = FontSans({
   subsets: ['latin'],
