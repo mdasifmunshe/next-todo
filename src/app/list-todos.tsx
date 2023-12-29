@@ -27,8 +27,27 @@ import Link from 'next/link'
 import { trpc } from './_trpc/client'
 
 export default function ListTodos() {
-  const { data } = trpc.todo.getAll.useQuery()
-  console.log(data)
+  const getTodos = trpc.todo.getAll.useQuery()
+  const deleteTodo = trpc.todo.delete.useMutation()
+
+  const handleDeleteTodo = (id: string) => {
+    deleteTodo.mutate(
+      { id: id },
+      {
+        onError: (err) => {
+          if (err.data?.code === 'INTERNAL_SERVER_ERROR') {
+            console.log('No todo was created')
+          }
+        },
+
+        onSettled: () => {
+          getTodos.refetch()
+        },
+      }
+    )
+  }
+
+  const { data } = getTodos
 
   if (!data) return <div>Loading..</div>
   if (data.length == 0) return <div>No Todos</div>
@@ -39,8 +58,7 @@ export default function ListTodos() {
         const createdAt = new Date(todo.createdAt).toLocaleDateString()
 
         const handleEditTodo = () => console.log('Edit Todo')
-        //const handleDelete = async () => await mutation.mutateAsync(todo.id)
-        const handleDelete = async () => console.log('Delete Todo')
+        const handleDelete = () => handleDeleteTodo(todo.id)
         const handleMarkAsDone = () => console.log('Mark as Done')
         return (
           <div

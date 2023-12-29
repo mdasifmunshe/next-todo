@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { publicProcedure, router } from '../trpc'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
@@ -43,4 +44,27 @@ export const todoRouter = router({
 
     return todo
   }),
+
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id } = input
+      const todo = await prisma.todo.delete({
+        where: { id },
+        select: defaultTodoSelect,
+      })
+
+      if (!todo) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `No todo was created`,
+        })
+      }
+
+      return todo
+    }),
 })
